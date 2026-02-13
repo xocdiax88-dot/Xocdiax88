@@ -2,259 +2,130 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Tài Xỉu VIP</title>
-
+<title>Flappy Bird VIP</title>
 <style>
 body{
-    background:#111;
-    color:white;
+    margin:0;
+    background:#70c5ce;
+    overflow:hidden;
     font-family:Arial;
     text-align:center;
 }
-.timer{
-    font-size:40px;
-    margin:15px;
+canvas{
+    background:#70c5ce;
+    display:block;
+    margin:auto;
 }
-.lock{
-    color:red;
-    font-size:18px;
-}
-.box{
-    display:flex;
-    justify-content:center;
-    gap:80px;
-    margin:20px;
-}
-.side{
-    text-align:center;
-}
-.tai,.xiu{
-    width:180px;
-    height:90px;
-    font-size:32px;
-    border-radius:15px;
-    border:none;
-    cursor:pointer;
-}
-.tai{background:#c49b3d;}
-.xiu{background:#ddd;color:black;}
-.betDisplay{
-    margin-top:10px;
-    font-size:22px;
-    color:yellow;
-}
-.chips button{
-    margin:5px;
-    padding:10px 15px;
-    border-radius:10px;
-    border:none;
-    cursor:pointer;
-}
-.betBtn{
-    margin-top:15px;
-    padding:10px 25px;
-    font-size:18px;
-    border:none;
-    border-radius:10px;
-    background:gold;
-    cursor:pointer;
-}
-.dice{
-    font-size:50px;
-    margin:20px;
-}
-.history{
-    margin-top:20px;
-    font-size:20px;
-}
-.circle{
-    display:inline-block;
-    width:30px;
-    height:30px;
-    line-height:30px;
-    border-radius:50%;
-    margin:3px;
-}
-.taiCircle{background:#c49b3d;}
-.xiuCircle{background:white;color:black;}
-.winEffect{
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    font-size:45px;
-    color:lime;
-    display:none;
+#score{
+    position:absolute;
+    top:20px;
+    width:100%;
+    font-size:30px;
+    color:white;
+    font-weight:bold;
 }
 </style>
 </head>
-
 <body>
 
-<h1>🎲 TÀI XỈU VIP 🎲</h1>
-<h2>Tiền: <span id="money">10000</span></h2>
-
-<div class="timer">
-⏳ <span id="time">50</span>s
-<div id="lockMsg" class="lock"></div>
-</div>
-
-<div class="box">
-<div class="side">
-<button class="tai" onclick="selectSide('tai')">TÀI</button>
-<div class="betDisplay" id="taiBet">0</div>
-</div>
-
-<div class="side">
-<button class="xiu" onclick="selectSide('xiu')">XỈU</button>
-<div class="betDisplay" id="xiuBet">0</div>
-</div>
-</div>
-
-<div class="chips">
-<button onclick="addBet(1000)">1K</button>
-<button onclick="addBet(10000)">10K</button>
-<button onclick="addBet(50000)">50K</button>
-<button onclick="addBet(100000)">100K</button>
-</div>
-
-<button class="betBtn" onclick="confirmBet()">ĐẶT CƯỢC</button>
-
-<div class="dice" id="diceArea">🎲 🎲 🎲</div>
-<button id="openBtn" onclick="openBowl()" style="display:none;">MỞ BÁT</button>
-
-<h3 id="result"></h3>
-
-<div class="history" id="history"></div>
-
-<div class="winEffect" id="winEffect"></div>
+<div id="score">0</div>
+<canvas id="game" width="400" height="600"></canvas>
 
 <script>
-let money=10000;
-let selected="";
-let betTai=0;
-let betXiu=0;
-let time=50;
-let d1,d2,d3;
-let waitingOpen=false;
-let locked=false;
-let historyList=[];
+let canvas = document.getElementById("game");
+let ctx = canvas.getContext("2d");
 
-function selectSide(side){
-    if(locked) return;
-    selected=side;
+let bird = {
+    x:80,
+    y:200,
+    size:20,
+    gravity:0.6,
+    lift:-10,
+    velocity:0
+};
+
+let pipes = [];
+let frame = 0;
+let score = 0;
+let gameOver = false;
+
+function drawBird(){
+    ctx.fillStyle="yellow";
+    ctx.beginPath();
+    ctx.arc(bird.x,bird.y,bird.size,0,Math.PI*2);
+    ctx.fill();
 }
 
-function addBet(amount){
-    if(locked || selected=="" || money<amount) return;
+function drawPipes(){
+    ctx.fillStyle="green";
+    pipes.forEach(pipe=>{
+        ctx.fillRect(pipe.x,0,50,pipe.top);
+        ctx.fillRect(pipe.x,pipe.bottom,50,600);
+    });
+}
 
-    if(selected=="tai"){
-        betTai+=amount;
-        document.getElementById("taiBet").innerHTML=betTai;
-    }else{
-        betXiu+=amount;
-        document.getElementById("xiuBet").innerHTML=betXiu;
+function update(){
+    if(gameOver) return;
+
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
+
+    if(frame % 90 === 0){
+        let top = Math.random()*300+50;
+        let gap = 150;
+        pipes.push({
+            x:400,
+            top:top,
+            bottom:top+gap
+        });
     }
 
-    money-=amount;
-    document.getElementById("money").innerHTML=money;
-}
+    pipes.forEach(pipe=>{
+        pipe.x -= 3;
 
-function confirmBet(){
-    if(locked) return;
-    if(betTai==0 && betXiu==0){
-        alert("Chưa đặt cược!");
-    }
-}
+        if(pipe.x === bird.x){
+            score++;
+            document.getElementById("score").innerText = score;
+        }
 
-function startShake(){
-    document.getElementById("openBtn").style.display="inline-block";
-    waitingOpen=true;
-
-    let shakeInterval=setInterval(()=>{
-        document.getElementById("diceArea").innerHTML=
-        Math.floor(Math.random()*6+1)+" 🎲 "+
-        Math.floor(Math.random()*6+1)+" 🎲 "+
-        Math.floor(Math.random()*6+1);
-    },100);
-
-    setTimeout(()=>{
-        clearInterval(shakeInterval);
-        d1=Math.floor(Math.random()*6)+1;
-        d2=Math.floor(Math.random()*6)+1;
-        d3=Math.floor(Math.random()*6)+1;
-    },1500);
-}
-
-function openBowl(){
-    if(!waitingOpen) return;
-
-    let sum=d1+d2+d3;
-    let resultSide=(sum>=11)?"tai":"xiu";
-
-    document.getElementById("diceArea").innerHTML=
-    d1+" 🎲 "+d2+" 🎲 "+d3+" = "+sum;
-
-    let winAmount=0;
-
-    if(resultSide=="tai"){
-        winAmount=betTai*2;
-    }else{
-        winAmount=betXiu*2;
-    }
-
-    money+=winAmount;
-    document.getElementById("money").innerHTML=money;
-
-    if(winAmount>0){
-        let win=document.getElementById("winEffect");
-        win.innerHTML="+ "+winAmount;
-        win.style.display="block";
-        setTimeout(()=>{ win.style.display="none"; },1500);
-    }
-
-    historyList.unshift(resultSide);
-    updateHistory();
-
-    betTai=0;
-    betXiu=0;
-    document.getElementById("taiBet").innerHTML=0;
-    document.getElementById("xiuBet").innerHTML=0;
-
-    document.getElementById("openBtn").style.display="none";
-    waitingOpen=false;
-    locked=false;
-}
-
-function updateHistory(){
-    let html="";
-    historyList.slice(0,15).forEach(r=>{
-        if(r=="tai"){
-            html+="<span class='circle taiCircle'>T</span>";
-        }else{
-            html+="<span class='circle xiuCircle'>X</span>";
+        if(
+            bird.x < pipe.x + 50 &&
+            bird.x + bird.size > pipe.x &&
+            (bird.y - bird.size < pipe.top ||
+             bird.y + bird.size > pipe.bottom)
+        ){
+            gameOver = true;
+            alert("Game Over! Điểm: " + score);
+            location.reload();
         }
     });
-    document.getElementById("history").innerHTML=html;
+
+    if(bird.y > 600 || bird.y < 0){
+        gameOver = true;
+        alert("Game Over! Điểm: " + score);
+        location.reload();
+    }
+
+    frame++;
 }
 
-setInterval(function(){
-    time--;
-    document.getElementById("time").innerHTML=time;
+function draw(){
+    ctx.clearRect(0,0,400,600);
+    drawBird();
+    drawPipes();
+}
 
-    if(time<=5){
-        locked=true;
-        document.getElementById("lockMsg").innerHTML="ĐÃ KHÓA CƯỢC";
-    }else{
-        document.getElementById("lockMsg").innerHTML="";
-    }
+function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
 
-    if(time<=0){
-        time=50;
-        startShake();
-    }
-},1000);
+document.addEventListener("click",()=>{
+    bird.velocity = bird.lift;
+});
 
+loop();
 </script>
 
 </body>
