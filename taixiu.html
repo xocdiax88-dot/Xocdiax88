@@ -18,19 +18,27 @@ body{
 .box{
     display:flex;
     justify-content:center;
-    gap:40px;
+    gap:80px;
     margin:20px;
 }
+.side{
+    text-align:center;
+}
 .tai,.xiu{
-    width:150px;
-    height:80px;
-    font-size:30px;
+    width:180px;
+    height:90px;
+    font-size:32px;
     border-radius:15px;
     border:none;
     cursor:pointer;
 }
 .tai{background:#c49b3d;}
 .xiu{background:#ddd;color:black;}
+.betDisplay{
+    margin-top:10px;
+    font-size:20px;
+    color:yellow;
+}
 .chips button{
     margin:5px;
     padding:10px 15px;
@@ -47,29 +55,14 @@ body{
     background:gold;
     cursor:pointer;
 }
+.resetBtn{
+    margin-left:10px;
+    background:red;
+    color:white;
+}
 .dice{
     font-size:50px;
     margin:20px;
-}
-@keyframes shake{
-    0%{transform:translateY(0);}
-    25%{transform:translateY(-10px);}
-    50%{transform:translateY(0);}
-    75%{transform:translateY(-10px);}
-    100%{transform:translateY(0);}
-}
-.shake{
-    animation:shake 0.3s infinite;
-}
-.openBtn{
-    display:none;
-    padding:10px 25px;
-    font-size:18px;
-    border:none;
-    border-radius:10px;
-    background:red;
-    color:white;
-    cursor:pointer;
 }
 </style>
 </head>
@@ -84,11 +77,16 @@ body{
 </div>
 
 <div class="box">
+<div class="side">
 <button class="tai" onclick="selectSide('tai')">TÀI</button>
-<button class="xiu" onclick="selectSide('xiu')">XỈU</button>
+<div class="betDisplay" id="taiBet">0</div>
 </div>
 
-<h3>Tiền cược: <span id="bet">0</span></h3>
+<div class="side">
+<button class="xiu" onclick="selectSide('xiu')">XỈU</button>
+<div class="betDisplay" id="xiuBet">0</div>
+</div>
+</div>
 
 <div class="chips">
 <button onclick="addBet(1000)">1K</button>
@@ -98,17 +96,19 @@ body{
 </div>
 
 <button class="betBtn" onclick="confirmBet()">ĐẶT CƯỢC</button>
+<button class="betBtn resetBtn" onclick="resetBet()">RÚT</button>
 
 <div class="dice" id="diceArea">🎲 🎲 🎲</div>
-
-<button class="openBtn" id="openBtn" onclick="openBowl()">MỞ BÁT</button>
+<button id="openBtn" onclick="openBowl()" style="display:none;">MỞ BÁT</button>
 
 <h3 id="result"></h3>
 
 <script>
 let money=10000;
-let bet=0;
 let selected="";
+let betTai=0;
+let betXiu=0;
+let tempBet=0;
 let time=50;
 let d1,d2,d3;
 let waitingOpen=false;
@@ -119,53 +119,69 @@ function selectSide(side){
 
 function addBet(amount){
     if(money>=amount){
-        bet+=amount;
-        document.getElementById("bet").innerHTML=bet;
+        tempBet+=amount;
     }
 }
 
 function confirmBet(){
-    if(selected==""||bet==0){
-        alert("Chọn Tài/Xỉu và đặt tiền!");
+    if(selected==""||tempBet==0){
+        alert("Chọn bên và chọn tiền!");
         return;
     }
-    money-=bet;
+
+    if(selected=="tai"){
+        betTai+=tempBet;
+        document.getElementById("taiBet").innerHTML=betTai;
+    }else{
+        betXiu+=tempBet;
+        document.getElementById("xiuBet").innerHTML=betXiu;
+    }
+
+    money-=tempBet;
+    document.getElementById("money").innerHTML=money;
+    tempBet=0;
+}
+
+function resetBet(){
+    money+=betTai+betXiu;
+    betTai=0;
+    betXiu=0;
+    document.getElementById("taiBet").innerHTML=0;
+    document.getElementById("xiuBet").innerHTML=0;
     document.getElementById("money").innerHTML=money;
 }
 
 function startShake(){
-    let diceArea=document.getElementById("diceArea");
-    diceArea.classList.add("shake");
     document.getElementById("openBtn").style.display="inline-block";
-
     d1=Math.floor(Math.random()*6)+1;
     d2=Math.floor(Math.random()*6)+1;
     d3=Math.floor(Math.random()*6)+1;
-
     waitingOpen=true;
 }
 
 function openBowl(){
     if(!waitingOpen)return;
 
-    let diceArea=document.getElementById("diceArea");
-    diceArea.classList.remove("shake");
-    diceArea.innerHTML=d1+" 🎲 "+d2+" 🎲 "+d3;
-
     let sum=d1+d2+d3;
     let resultSide=(sum>=11)?"tai":"xiu";
 
-    if(selected==resultSide){
-        money+=bet*2;
-        document.getElementById("result").innerHTML="🎉 Thắng! Tổng: "+sum;
+    document.getElementById("diceArea").innerHTML=
+    d1+" 🎲 "+d2+" 🎲 "+d3+" = "+sum;
+
+    if(resultSide=="tai"){
+        money+=betTai*2;
     }else{
-        document.getElementById("result").innerHTML="💀 Thua! Tổng: "+sum;
+        money+=betXiu*2;
     }
 
     document.getElementById("money").innerHTML=money;
-    bet=0;
-    selected="";
-    document.getElementById("bet").innerHTML=0;
+    document.getElementById("result").innerHTML="Kết quả: "+resultSide.toUpperCase();
+
+    betTai=0;
+    betXiu=0;
+    document.getElementById("taiBet").innerHTML=0;
+    document.getElementById("xiuBet").innerHTML=0;
+
     document.getElementById("openBtn").style.display="none";
     waitingOpen=false;
 }
