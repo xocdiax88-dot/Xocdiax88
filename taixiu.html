@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tài Xỉu</title>
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: linear-gradient(to right, #1e3c72, #2a5298);
+    color: white;
+}
+.box {
+    margin-top: 30px;
+}
+button {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.tai { background-color: #2ecc71; }
+.xiu { background-color: #e74c3c; }
+.roll { background-color: #f1c40f; }
+</style>
+</head>
+
+<body>
+
+<h1>🎲 GAME TÀI XỈU 🎲</h1>
+
+<h2>Tiền của bạn: <span id="money">1000</span> xu</h2>
+
+<div class="box">
+    <button class="tai" onclick="datCuoc('tai')">TÀI</button>
+    <button class="xiu" onclick="datCuoc('xiu')">XỈU</button>
+</div>
+
+<h3 id="result"></h3>
+<h3 id="dice"></h3>
+
+<script>
+let money = 1000;
+let choice = "";
+
+function datCuoc(chon) {
+    choice = chon;
+    rollDice();
+}
+
+function rollDice() {
+    let d1 = Math.floor(Math.random()*6)+1;
+    let d2 = Math.floor(Math.random()*6)+1;
+    let d3 = Math.floor(Math.random()*6)+1;
+    let sum = d1 + d2 + d3;
+
+    document.getElementById("dice").innerHTML =
+        "🎲 Kết quả: " + d1 + " - " + d2 + " - " + d3 + " (Tổng: " + sum + ")";
+
+    let ketQua = (sum >= 11) ? "tai" : "xiu";
+
+    if(choice == ketQua) {
+        money += 100;
+        document.getElementById("result").innerHTML = "🎉 Bạn thắng!";
+    } else {
+        money -= 100;
+        document.getElementById("result").innerHTML = "💀 Bạn thua!";
+    }
+
+    document.getElementById("money").innerHTML = money;
+
+    if(money <= 0) {
+        alert("Bạn đã hết tiền!");
+        money = 1000;
+    }
+}
+</script>
+
+</body>
+</html>
