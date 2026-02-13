@@ -36,7 +36,7 @@ body{
 .xiu{background:#ddd;color:black;}
 .betDisplay{
     margin-top:10px;
-    font-size:20px;
+    font-size:22px;
     color:yellow;
 }
 .chips button{
@@ -55,14 +55,36 @@ body{
     background:gold;
     cursor:pointer;
 }
-.resetBtn{
-    margin-left:10px;
-    background:red;
-    color:white;
-}
 .dice{
     font-size:50px;
     margin:20px;
+}
+.popup{
+    position:fixed;
+    top:40%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:gold;
+    color:black;
+    padding:20px 40px;
+    font-size:22px;
+    border-radius:15px;
+    display:none;
+}
+.winEffect{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:40px;
+    color:lime;
+    display:none;
+    animation:zoom 1s ease;
+}
+@keyframes zoom{
+    0%{transform:translate(-50%,-50%) scale(0.5);}
+    50%{transform:translate(-50%,-50%) scale(1.3);}
+    100%{transform:translate(-50%,-50%) scale(1);}
 }
 </style>
 </head>
@@ -96,19 +118,20 @@ body{
 </div>
 
 <button class="betBtn" onclick="confirmBet()">ĐẶT CƯỢC</button>
-<button class="betBtn resetBtn" onclick="resetBet()">RÚT</button>
 
 <div class="dice" id="diceArea">🎲 🎲 🎲</div>
 <button id="openBtn" onclick="openBowl()" style="display:none;">MỞ BÁT</button>
 
 <h3 id="result"></h3>
 
+<div class="popup" id="popup">Đặt cược thành công!</div>
+<div class="winEffect" id="winEffect"></div>
+
 <script>
 let money=10000;
 let selected="";
 let betTai=0;
 let betXiu=0;
-let tempBet=0;
 let time=50;
 let d1,d2,d3;
 let waitingOpen=false;
@@ -118,37 +141,29 @@ function selectSide(side){
 }
 
 function addBet(amount){
-    if(money>=amount){
-        tempBet+=amount;
-    }
-}
-
-function confirmBet(){
-    if(selected==""||tempBet==0){
-        alert("Chọn bên và chọn tiền!");
-        return;
-    }
+    if(selected=="" || money<amount) return;
 
     if(selected=="tai"){
-        betTai+=tempBet;
+        betTai+=amount;
         document.getElementById("taiBet").innerHTML=betTai;
     }else{
-        betXiu+=tempBet;
+        betXiu+=amount;
         document.getElementById("xiuBet").innerHTML=betXiu;
     }
 
-    money-=tempBet;
+    money-=amount;
     document.getElementById("money").innerHTML=money;
-    tempBet=0;
 }
 
-function resetBet(){
-    money+=betTai+betXiu;
-    betTai=0;
-    betXiu=0;
-    document.getElementById("taiBet").innerHTML=0;
-    document.getElementById("xiuBet").innerHTML=0;
-    document.getElementById("money").innerHTML=money;
+function confirmBet(){
+    if(betTai==0 && betXiu==0){
+        alert("Bạn chưa đặt cược!");
+        return;
+    }
+
+    let popup=document.getElementById("popup");
+    popup.style.display="block";
+    setTimeout(()=>{ popup.style.display="none"; },1500);
 }
 
 function startShake(){
@@ -160,7 +175,7 @@ function startShake(){
 }
 
 function openBowl(){
-    if(!waitingOpen)return;
+    if(!waitingOpen) return;
 
     let sum=d1+d2+d3;
     let resultSide=(sum>=11)?"tai":"xiu";
@@ -168,14 +183,25 @@ function openBowl(){
     document.getElementById("diceArea").innerHTML=
     d1+" 🎲 "+d2+" 🎲 "+d3+" = "+sum;
 
+    let winAmount=0;
+
     if(resultSide=="tai"){
-        money+=betTai*2;
+        winAmount=betTai*2;
+        money+=winAmount;
     }else{
-        money+=betXiu*2;
+        winAmount=betXiu*2;
+        money+=winAmount;
     }
 
     document.getElementById("money").innerHTML=money;
     document.getElementById("result").innerHTML="Kết quả: "+resultSide.toUpperCase();
+
+    if(winAmount>0){
+        let win=document.getElementById("winEffect");
+        win.innerHTML="+ "+winAmount;
+        win.style.display="block";
+        setTimeout(()=>{ win.style.display="none"; },1500);
+    }
 
     betTai=0;
     betXiu=0;
