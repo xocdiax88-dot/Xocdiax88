@@ -9,17 +9,18 @@ body{
     background:#70c5ce;
     overflow:hidden;
     font-family:Arial;
-    text-align:center;
 }
 canvas{
-    background:#70c5ce;
     display:block;
     margin:auto;
+    background:#70c5ce;
+    touch-action: manipulation;
 }
 #score{
     position:absolute;
     top:20px;
     width:100%;
+    text-align:center;
     font-size:30px;
     color:white;
     font-weight:bold;
@@ -35,10 +36,14 @@ canvas{
 let canvas = document.getElementById("game");
 let ctx = canvas.getContext("2d");
 
+let birdImg = new Image();
+birdImg.src = "bird.png"; // để cùng thư mục
+
 let bird = {
     x:80,
-    y:200,
-    size:20,
+    y:250,
+    width:50,
+    height:50,
     gravity:0.6,
     lift:-10,
     velocity:0
@@ -50,17 +55,18 @@ let score = 0;
 let gameOver = false;
 
 function drawBird(){
-    ctx.fillStyle="yellow";
-    ctx.beginPath();
-    ctx.arc(bird.x,bird.y,bird.size,0,Math.PI*2);
-    ctx.fill();
+    ctx.save();
+    ctx.translate(bird.x, bird.y);
+    ctx.rotate(bird.velocity * 0.05);
+    ctx.drawImage(birdImg, -25, -25, bird.width, bird.height);
+    ctx.restore();
 }
 
 function drawPipes(){
     ctx.fillStyle="green";
     pipes.forEach(pipe=>{
-        ctx.fillRect(pipe.x,0,50,pipe.top);
-        ctx.fillRect(pipe.x,pipe.bottom,50,600);
+        ctx.fillRect(pipe.x,0,60,pipe.top);
+        ctx.fillRect(pipe.x,pipe.bottom,60,600);
     });
 }
 
@@ -71,39 +77,37 @@ function update(){
     bird.y += bird.velocity;
 
     if(frame % 90 === 0){
-        let top = Math.random()*300+50;
+        let top = Math.random()*250+50;
         let gap = 150;
         pipes.push({
             x:400,
             top:top,
-            bottom:top+gap
+            bottom:top+gap,
+            passed:false
         });
     }
 
     pipes.forEach(pipe=>{
         pipe.x -= 3;
 
-        if(pipe.x === bird.x){
+        if(!pipe.passed && pipe.x < bird.x){
             score++;
             document.getElementById("score").innerText = score;
+            pipe.passed = true;
         }
 
         if(
-            bird.x < pipe.x + 50 &&
-            bird.x + bird.size > pipe.x &&
-            (bird.y - bird.size < pipe.top ||
-             bird.y + bird.size > pipe.bottom)
+            bird.x + 20 > pipe.x &&
+            bird.x - 20 < pipe.x + 60 &&
+            (bird.y - 20 < pipe.top ||
+             bird.y + 20 > pipe.bottom)
         ){
-            gameOver = true;
-            alert("Game Over! Điểm: " + score);
-            location.reload();
+            endGame();
         }
     });
 
     if(bird.y > 600 || bird.y < 0){
-        gameOver = true;
-        alert("Game Over! Điểm: " + score);
-        location.reload();
+        endGame();
     }
 
     frame++;
@@ -121,9 +125,46 @@ function loop(){
     requestAnimationFrame(loop);
 }
 
-document.addEventListener("click",()=>{
-    bird.velocity = bird.lift;
-});
+function jump(){
+    if(!gameOver){
+        bird.velocity = bird.lift;
+    }
+}
+
+document.addEventListener("click", jump);
+document.addEventListener("touchstart", jump);
+
+function endGame(){
+    gameOver = true;
+
+    let over = document.createElement("div");
+    over.innerHTML = `
+    <div style="
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    font-size:22px;
+    text-align:center;
+    box-shadow:0 0 20px rgba(0,0,0,0.5);">
+    Game Over<br>
+    Điểm: ${score}<br><br>
+    <button onclick="location.reload()" style="
+    padding:10px 20px;
+    font-size:16px;
+    border:none;
+    background:#4CAF50;
+    color:white;
+    border-radius:10px;">
+    Chơi lại
+    </button>
+    </div>
+    `;
+    document.body.appendChild(over);
+}
 
 loop();
 </script>
