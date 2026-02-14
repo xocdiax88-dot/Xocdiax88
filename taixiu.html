@@ -1,174 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Flappy Bird VIP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Check Scam</title>
+
 <style>
 body{
     margin:0;
-    background:#70c5ce;
-    font-family:Arial;
-    display:flex;
-    flex-direction:column;
-    height:100vh;
-}
-
-/* Màn hình game phía trên */
-#gameContainer{
-    flex:1;
-    position:relative;
-}
-
-canvas{
-    display:block;
-    margin:auto;
-    background:#70c5ce;
-}
-
-/* Nút tròn phía dưới */
-#control{
-    height:140px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:#5faeb5;
-}
-
-#jumpBtn{
-    width:100px;
-    height:100px;
-    border-radius:50%;
-    border:none;
-    font-size:20px;
-    background:white;
-    box-shadow:0 5px 15px rgba(0,0,0,0.4);
-}
-
-#score{
-    position:absolute;
-    top:10px;
-    width:100%;
-    text-align:center;
-    font-size:28px;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#111,#222);
     color:white;
+    text-align:center;
+}
+
+header{
+    background:#ff0000;
+    padding:20px;
+    font-size:28px;
     font-weight:bold;
+}
+
+.container{
+    margin-top:40px;
+}
+
+input{
+    padding:12px;
+    width:250px;
+    border:none;
+    border-radius:5px;
+    font-size:16px;
+}
+
+button{
+    padding:12px 20px;
+    margin-left:10px;
+    border:none;
+    border-radius:5px;
+    background:#ff0000;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#cc0000;
+}
+
+.result{
+    margin-top:30px;
+    font-size:20px;
+    font-weight:bold;
+}
+.safe{
+    color:#00ff00;
+}
+.scam{
+    color:#ff4444;
 }
 </style>
 </head>
+
 <body>
 
-<div id="gameContainer">
-    <div id="score">0</div>
-    <canvas id="game" width="400" height="500"></canvas>
-</div>
+<header>🔎 ADMIN CHECK SCAM</header>
 
-<div id="control">
-    <button id="jumpBtn">NHẢY</button>
+<div class="container">
+    <p>Nhập tên tài khoản cần kiểm tra:</p>
+    <input type="text" id="username" placeholder="Nhập username...">
+    <button onclick="checkScam()">Kiểm Tra</button>
+
+    <div class="result" id="result"></div>
 </div>
 
 <script>
-let canvas = document.getElementById("game");
-let ctx = canvas.getContext("2d");
+function checkScam(){
+    var user = document.getElementById("username").value.trim().toLowerCase();
+    var result = document.getElementById("result");
 
-let bird = {
-    x:80,
-    y:250,
-    size:20,
-    gravity:0.6,
-    lift:-10,
-    velocity:0
-};
+    // Danh sách scam mẫu (bạn có thể thêm)
+    var scamList = ["scam123", "hackroblox", "luadao", "abcscam"];
 
-let pipes = [];
-let frame = 0;
-let score = 0;
-let gameOver = false;
-
-function drawBird(){
-    ctx.fillStyle="yellow";
-    ctx.beginPath();
-    ctx.arc(bird.x,bird.y,bird.size,0,Math.PI*2);
-    ctx.fill();
-}
-
-function drawPipes(){
-    ctx.fillStyle="green";
-    pipes.forEach(pipe=>{
-        ctx.fillRect(pipe.x,0,60,pipe.top);
-        ctx.fillRect(pipe.x,pipe.bottom,60,500);
-    });
-}
-
-function update(){
-    if(gameOver) return;
-
-    bird.velocity += bird.gravity;
-    bird.y += bird.velocity;
-
-    if(frame % 90 === 0){
-        let top = Math.random()*200+50;
-        let gap = 140;
-        pipes.push({
-            x:400,
-            top:top,
-            bottom:top+gap,
-            passed:false
-        });
+    if(user === ""){
+        result.innerHTML = "❗ Vui lòng nhập tên tài khoản!";
+        result.className = "result scam";
+        return;
     }
 
-    pipes.forEach(pipe=>{
-        pipe.x -= 3;
-
-        if(!pipe.passed && pipe.x < bird.x){
-            score++;
-            document.getElementById("score").innerText = score;
-            pipe.passed = true;
-        }
-
-        if(
-            bird.x + bird.size > pipe.x &&
-            bird.x - bird.size < pipe.x + 60 &&
-            (bird.y - bird.size < pipe.top ||
-             bird.y + bird.size > pipe.bottom)
-        ){
-            endGame();
-        }
-    });
-
-    if(bird.y > 500 || bird.y < 0){
-        endGame();
-    }
-
-    frame++;
-}
-
-function draw(){
-    ctx.clearRect(0,0,400,500);
-    drawBird();
-    drawPipes();
-}
-
-function loop(){
-    update();
-    draw();
-    requestAnimationFrame(loop);
-}
-
-function jump(){
-    if(!gameOver){
-        bird.velocity = bird.lift;
+    if(scamList.includes(user)){
+        result.innerHTML = "🚨 TÀI KHOẢN NÀY ĐÃ BỊ BÁO SCAM!";
+        result.className = "result scam";
+    } else {
+        result.innerHTML = "✅ Không tìm thấy báo cáo scam.";
+        result.className = "result safe";
     }
 }
-
-document.getElementById("jumpBtn").addEventListener("click", jump);
-
-function endGame(){
-    gameOver = true;
-    alert("Game Over! Điểm: " + score);
-    location.reload();
-}
-
-loop();
 </script>
 
 </body>
